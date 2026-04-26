@@ -1,8 +1,5 @@
 use axum::{
-    Json,
-    extract::{Request, State},
-    http::{HeaderMap, StatusCode, header},
-    response::{IntoResponse, Response, Html},
+    Json, extract::{Request, State}, http::{HeaderMap, StatusCode, header}, response::{Html, IntoResponse, Response}
 };
 
 use tokio::task::spawn_blocking;
@@ -50,6 +47,15 @@ pub async fn get_favicon() -> impl IntoResponse {
 
     (
         [(header::CONTENT_TYPE, "image/x-icon")],
+        bytes
+    )
+}
+
+pub async fn get_font() -> impl IntoResponse {
+    let bytes = include_bytes!("./roboto.ttf");
+
+    (
+        [(header::CONTENT_TYPE, "font/ttf")],
         bytes
     )
 }

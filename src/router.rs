@@ -32,7 +32,8 @@ pub async fn get_router() -> Router {
 
     Router::new()
         .route("/", routing::get(handlers::serve_website))
-        .route("/favicon.ico", routing::get(handlers::get_favicon))
+        .route("/favicon", routing::get(handlers::get_favicon))
+        .route("/font", routing::get(handlers::get_font))
         .route(
             "/login", 
             routing::post(handlers::login)

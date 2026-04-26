@@ -8,6 +8,7 @@ use dotenv::dotenv;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tokio::signal;
+use std::net::SocketAddr;
 
 use router::get_router;
 use db::init_db;
@@ -40,7 +41,7 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
     println!("Server listening on port {port}");
-    axum::serve(listener, router)
+    axum::serve(listener, router.into_make_service_with_connect_info::<SocketAddr>())
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selfhost auth</title>
-    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <title>Selfhost Auth</title>
+    <link rel="icon" href="./favicon" type="image/x-icon">
 </head>
 <body>
 <script>
@@ -13,6 +13,9 @@ const redirectUrl = params.get("redirect") || "/";
 
 async function login() {
   const password = document.getElementById('password').value;
+
+  if (!password.trim()) return;
+
   try {
     const response = await fetch('/login', {
       method: 'POST',
@@ -24,19 +27,94 @@ async function login() {
     if (response.ok) {
       window.location.href = redirectUrl;
     } else {
-      alert(data.message || 'Login failed');
+      document.getElementById("error-message").textContent = "Invalid credentials";
     }
   } catch (error) {
-    alert('Network error');
+    document.getElementById("error-message").textContent = "Network error";
   }
 }
 </script>
 <main>
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Log in</button>
+  <div class="login-form">
+    <input 
+      type="password" 
+      id="password" 
+      placeholder="Password" 
+      onkeydown="if(event.key === 'Enter') login()"
+      autofocus
+    >
+    <button onclick="login()">Log in</button>
+    <div id="error-message"></div>
+  </div>
 </main>
 <style>
+@font-face {
+  font-family: "Roboto";
+  src: url("/font") format("truetype");
+}
 
+* {
+  font-family: "Roboto";
+}
+
+html, body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: #0a0a0a;
+  background-image: radial-gradient(circle, #333 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  width: 20rem;
+  gap: 1rem;
+}
+
+input {
+  height: 2.5rem;
+  text-align: center;
+  border: 0.25rem solid #272727;
+  outline: none;
+  border-radius: 0.5rem;
+  transition: 0.2s;
+  font-size: 1.1rem;
+  background-color: black;
+  color: white;
+}
+
+input:focus {
+  border-color: white;
+}
+
+button {
+  background-color: white;
+  color black;
+  border: none;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(0.7);
+}
+
+#error-message {
+  color: red;
+  font-size: 1rem;
+  text-align: center;
+}
 </style>
 </body>
 </html>
