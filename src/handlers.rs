@@ -51,7 +51,6 @@ pub async fn login(
     );
     
     let password_hash = std::env::var("PASSWORD_HASH").unwrap();
-    tracing::info!("Password hash: {}", password_hash);
 
     let result = spawn_blocking(move || bcrypt::verify(&body.password, &password_hash))
         .await

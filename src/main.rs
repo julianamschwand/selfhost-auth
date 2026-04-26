@@ -11,6 +11,7 @@ use axum::{Router, routing};
 use db::{create_pool, init_db};
 use types::AppState;
 use handlers::{check_login, login};
+use tokio::signal;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -35,12 +36,38 @@ async fn main() {
 
     let router = get_router().await;
 
-    let port = std::env::var("PORT").unwrap_or_else(|_| String::from("3000"));
-    let address = format!("127.0.0.1:{port}");
+    let port = std::env::var("PORT").unwrap_or_else(|_| String::from("8080"));
+    let address = format!("0.0.0.0:{port}");
 
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
     println!("Server listening on port {port}");
-    axum::serve(listener, router).await.unwrap();
+    axum::serve(listener, router)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    println!("Shutting down ...");
 }
 
 pub async fn get_router() -> Router {
@@ -55,7 +82,7 @@ pub async fn get_router() -> Router {
 }
 
 pub fn hash_password(password: &str) {
-    let password_hash = bcrypt::hash(password, 10).expect("Error while hashing password");
+    let password_hash = bcrypt::hash(password, bcrypt::DEFAULT_COST).expect("Error while hashing password");
     println!("{password_hash}");
     std::process::exit(0);
 }
