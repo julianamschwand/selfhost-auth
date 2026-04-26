@@ -16,6 +16,18 @@ fn time_now() -> i64 {
         .as_secs() as i64
 }
 
+fn create_cookie(session_id: &str) -> String {
+    let mut cookie = format!("session_id={session_id}; HttpOnly; Path=/; SameSite=Strict; Max-Age=2592000");
+
+    if let Ok(app_env) = std::env::var("APP_ENV") {
+        if app_env == "production" {
+            cookie.push_str("; Secure");
+        }
+    }
+
+    cookie
+}
+
 pub async fn create_session(pool: &SqlitePool) -> Result<String, sqlx::Error> {
     let session_id = generate_session_id();
 
@@ -29,13 +41,15 @@ pub async fn create_session(pool: &SqlitePool) -> Result<String, sqlx::Error> {
     .execute(pool)
     .await?;
 
-    Ok(session_id)
+    let cookie = create_cookie(&session_id);
+
+    Ok(cookie)
 }
 
 pub async fn check_session(
     pool: &SqlitePool,
     session_id: &str,
-) -> Result<Option<()>, sqlx::Error> {
+) -> Result<Option<String>, sqlx::Error> {
     let now = time_now();
 
     sqlx::query!("DELETE FROM sessions WHERE ? > expires_at", now)
@@ -49,8 +63,21 @@ pub async fn check_session(
     .fetch_optional(pool)
     .await?;
 
+    let cookie = create_cookie(&session_id);
+    let expires_at = time_now() + (60 * 60 * 24 * 30); // 30 days
+
     match session {
-        Some(_) => Ok(Some(())),
+        Some(_) => {
+            sqlx::query!(
+                "UPDATE sessions SET expires_at = ? where session_id = ?",
+                expires_at,
+                session_id
+            )
+            .execute(pool)
+            .await?;
+            
+            Ok(Some(cookie))
+        },
         None => Ok(None),
     }
 }

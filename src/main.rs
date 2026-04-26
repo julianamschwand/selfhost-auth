@@ -2,16 +2,15 @@ mod db;
 mod handlers;
 mod sessions;
 mod types;
+mod router;
 
 use dotenv::dotenv;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use axum::{Router, routing};
-
-use db::{create_pool, init_db};
-use types::AppState;
-use handlers::{check_login, login};
 use tokio::signal;
+
+use router::get_router;
+use db::init_db;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -70,16 +69,6 @@ async fn shutdown_signal() {
     println!("Shutting down ...");
 }
 
-pub async fn get_router() -> Router {
-    let pool = create_pool().await.expect("Error while connecting DB pool");
-
-    let state = AppState { db: pool };
-
-    Router::new()
-        .route("/login", routing::post(login))
-        .route("/check-login", routing::get(check_login))
-        .with_state(state)
-}
 
 pub fn hash_password(password: &str) {
     let password_hash = bcrypt::hash(password, bcrypt::DEFAULT_COST).expect("Error while hashing password");

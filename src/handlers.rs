@@ -2,7 +2,7 @@ use axum::{
     Json,
     extract::{Request, State},
     http::{HeaderMap, StatusCode, header},
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Response, Html},
 };
 
 use tokio::task::spawn_blocking;
@@ -41,6 +41,19 @@ pub fn internal_error<E: std::error::Error>(err: E) -> Response {
         .into_response()
 }
 
+pub async fn serve_website() -> Html<&'static str> { 
+    Html(include_str!("./website.html"))
+}
+
+pub async fn get_favicon() -> impl IntoResponse {
+    let bytes = include_bytes!("./favicon.ico");
+
+    (
+        [(header::CONTENT_TYPE, "image/x-icon")],
+        bytes
+    )
+}
+
 pub async fn login(
     State(state): State<AppState>,
     Json(body): Json<LoginBody>,
@@ -66,12 +79,9 @@ pub async fn login(
 
     let mut response = (StatusCode::OK, Json(Message::new("Login successful"))).into_response();
 
-    let session_id = create_session(&state.db)
+    let cookie = create_session(&state.db)
         .await
         .map_err(|e| internal_error(e))?;
-
-    let cookie =
-        format!("session_id={session_id}; HttpOnly; Path=/; SameSite=Strict; Max-Age=2592000");
 
     response
         .headers_mut()
@@ -108,17 +118,15 @@ pub async fn check_login(
         None => return unauthorized_error,
     };
 
-    if let None = check_session(&state.db, &session_id)
+    let cookie = match check_session(&state.db, &session_id)
         .await
         .map_err(|e| internal_error(e))?
     {
-        return unauthorized_error;
+        Some(cookie) => cookie,
+        None => return unauthorized_error,
     };
 
     let mut response = (StatusCode::OK, Json(Message::new("Checked login successfully"))).into_response();
-    
-    let cookie =
-        format!("session_id={session_id}; HttpOnly; Path=/; SameSite=Strict; Max-Age=2592000");
 
     response
         .headers_mut()
@@ -128,3 +136,4 @@ pub async fn check_login(
 
     Ok(response)
 }
+

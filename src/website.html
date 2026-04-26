@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selfhost auth</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+</head>
+<body>
+<script>
+const params = new URLSearchParams(window.location.search);
+const redirectUrl = params.get("redirect") || "/";
+
+async function login() {
+  const password = document.getElementById('password').value;
+  try {
+    const response = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      window.location.href = redirectUrl;
+    } else {
+      alert(data.message || 'Login failed');
+    }
+  } catch (error) {
+    alert('Network error');
+  }
+}
+</script>
+<main>
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Log in</button>
+</main>
+<style>
+
+</style>
+</body>
+</html>
