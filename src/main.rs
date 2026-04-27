@@ -32,6 +32,10 @@ async fn main() {
         "PASSWORD_HASH env var has to be set. Enter your password as a parameter to the program to hash it"
     );
 
+    std::env::var("COOKIE_DOMAIN").expect(
+        "COOKIE_DOMAIN env var has to be set"
+    );
+
     init_db().await.expect("Error while initializing DB");
 
     let router = get_router().await;

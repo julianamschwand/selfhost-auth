@@ -17,7 +17,8 @@ fn time_now() -> i64 {
 }
 
 fn create_cookie(session_id: &str) -> String {
-    let mut cookie = format!("session_id={session_id}; HttpOnly; Path=/; SameSite=Strict; Max-Age=2592000");
+    let domain = std::env::var("COOKIE_DOMAIN").unwrap();
+    let mut cookie = format!("session_id={session_id}; HttpOnly; Path=/; Domain={domain} SameSite=Lax; Max-Age=2592000");
 
     if let Ok(app_env) = std::env::var("APP_ENV") {
         if app_env == "production" {
