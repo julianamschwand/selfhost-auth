@@ -132,7 +132,7 @@ pub async fn check_login(
         None => return unauthorized_error,
     };
 
-    let mut response = (StatusCode::OK, Json(Message::new("Checked login successfully"))).into_response();
+    let mut response = (StatusCode::OK, Json(Message::new("Logged in"))).into_response();
 
     response
         .headers_mut()
