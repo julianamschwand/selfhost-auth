@@ -1,6 +1,7 @@
 # Selfhost Auth
 Selfhost auth is a simple auth you can use to protect self hosted services on your webserver. 
 It's especially useful to protect services that usually don't provide authentication themselves, like SearXNG for example.
+The main advantage this has over basic auth, is that it persists between multiple browser sessions.
 
 <img width="2557" height="1440" alt="Selfhost Auth login page" src="https://github.com/user-attachments/assets/f225f01d-4606-4184-b2ba-4250c6230e0b" />
 
